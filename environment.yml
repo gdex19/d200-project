@@ -1,0 +1,27 @@
+name: final-project-d200
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy=1.26.0
+  - polars
+  - pandas
+  - seaborn
+  - pre-commit
+  - ipykernel
+  - click
+  - nbformat
+  - pytest
+  - pytest-cov
+  - pip
+  - requests
+  - pyarrow
+  - statsmodels
+  - pandas-market-calendars
+  - pytorch
+  - glum
+  - lightgbm
+  - joblib
+  - skops
+  - dalex

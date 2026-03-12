@@ -1,0 +1,13 @@
+[project]
+name = "d200_project"
+version = "0.1"
+requires-python = ">=3.10"
+authors = [
+  {name = "Anonymous"},
+]
+description = "Modeling Bitcoin Distributions"
+readme = "README.md"
+keywords = ["bitcoin", "data analysis", "data science", "finance"]
+classifiers = [
+  "Programming Language :: Python"
+]
