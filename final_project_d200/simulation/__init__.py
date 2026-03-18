@@ -1,7 +1,7 @@
 from .simulation import (
-    price_call_normal,
+    simulate_call_trades_normal,
 )
 
 __all__ = [
-    "price_call_normal",
+    "simulate_call_trades_normal",
 ]
