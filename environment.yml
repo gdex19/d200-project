@@ -12,6 +12,7 @@ dependencies:
   - ipykernel
   - click
   - nbformat
+  - nbconvert
   - pip
   - requests
   - pyarrow

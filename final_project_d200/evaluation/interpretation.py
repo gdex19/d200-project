@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+
 def get_predicted_parameters(model: nn.Module, data_loader: DataLoader) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Return predicted mixture probabilities, means, and scales across dataset.
