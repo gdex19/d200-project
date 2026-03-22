@@ -1,7 +1,10 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-from final_project_d200.evaluation import compute_nll_from_mdn_output, compute_pretrain_loss_from_output, compute_mdn_nll, compute_mean_crps_mdn
+from final_project_d200.evaluation import (
+    compute_nll_from_mdn_output, compute_pretrain_loss_from_output, compute_mdn_nll, 
+    compute_mean_crps_mdn, compute_mean_crps_mdn_outputs
+)
 from typing import Callable
 import numpy as np
 from typing import Any
@@ -46,6 +49,92 @@ def train_mdn(model: nn.Module, data_loader: DataLoader, optimizer: torch.optim.
         optimizer.step()
     
     return sum(nlls) / len(nlls)
+
+def train_mdn_crps(model: nn.Module, data_loader: DataLoader, optimizer: torch.optim.Optimizer) -> float:
+    """
+    Train one epoch for MDN predicting return distribution, using crps as loss.
+
+    Parameters
+    ----------
+    model : nn.Module
+        MDN model.
+    data_loader : DataLoader
+        Data loader with inputs and targets.
+    optimizer : torch.optim.Optimizer
+        Optimizer for training.
+    lambda_mean : float, optional
+        Regularization parameter for mean predictions, defaults to 0.0.
+
+    Returns
+    -------
+    float
+        Mean nll across batches.
+    """
+    device = next(model.parameters()).device
+    model = model.to(device)
+
+    model.train()
+    crpss = []
+
+
+    for _, (X, y) in enumerate(data_loader):
+        X, y = X.to(device), y.to(device)
+
+        optimizer.zero_grad()
+        mixture_weights, means, scales = model(X)
+
+        loss = compute_mean_crps_mdn_outputs(y, mixture_weights, means, scales)
+        crpss.append(loss.item())
+
+        loss.backward()
+        optimizer.step()
+    
+    return sum(crpss) / len(crpss)
+
+def train_mdn_crps_and_nll(model: nn.Module, data_loader: DataLoader, optimizer: torch.optim.Optimizer, crps_weight: float = 0.0) -> float:
+    """
+    Train one epoch for MDN predicting return distribution, using crps and nll as loss.
+
+    Parameters
+    ----------
+    model : nn.Module
+        MDN model.
+    data_loader : DataLoader
+        Data loader with inputs and targets.
+    optimizer : torch.optim.Optimizer
+        Optimizer for training.
+    lambda_mean : float, optional
+        Regularization parameter for mean predictions, defaults to 0.0.
+
+    Returns
+    -------
+    float
+        Mean nll across batches.
+    """
+    device = next(model.parameters()).device
+    model = model.to(device)
+
+    model.train()
+    losses = []
+
+
+    for _, (X, y) in enumerate(data_loader):
+        X, y = X.to(device), y.to(device)
+
+        optimizer.zero_grad()
+        mixture_probs, means, scales = model(X)
+
+        crps_loss = compute_mean_crps_mdn_outputs(y, mixture_probs, means, scales)
+        nll_loss = compute_nll_from_mdn_output(y, mixture_probs, means, scales)
+
+        crps_loss_scaled = crps_loss * 1000
+        loss = crps_loss_scaled * crps_weight + nll_loss * (1 - crps_weight)
+        losses.append(loss.item())
+
+        loss.backward()
+        optimizer.step()
+    
+    return sum(losses) / len(losses)
 
 
 def pretrain_mdn(model: nn.Module, data_loader: DataLoader, optimizer: torch.optim.Optimizer, loss_fn: Callable) -> float:

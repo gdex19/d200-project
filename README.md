@@ -16,20 +16,6 @@ Activate the environment by running:
 conda activate final-project-d200
 ```
 
-## Pre-commit
-
-This repository uses pre-commit to enforce consistent code. To install
-pre-commit, run:
-
-```bash
-pre-commit install
-```
-
-To run the checks manually, run:
-
-```bash
-pre-commit run --all-files
-```
 ## Installing the package
 Before downloading the data and running the analyses, you must first install the project's package:
 
@@ -38,10 +24,11 @@ pip install -e .
 ```
 
 # Getting the data
-TODO: FINISH
+Download data from https://drive.google.com/file/d/1TOq3kuFB2RkvrQRKvcrK2h1id9KVBjIJ/view?usp=drive_link and place in 
+data directory (not in the package). 
 
 # Reproducing the analysis
-After pulling the data as above, run ```eda.ipynb``` to see the exploratory data analysis and save the cleaned
-data. 
+After downloading the data as above, run ```mdn.ipynb``` to reproduce the analysis. Note that the end of the notebook is
+in progress, and that the grid search does not contain all combinations of parameters that were tested. Feel free to play around!
 
 TODO: FINISH

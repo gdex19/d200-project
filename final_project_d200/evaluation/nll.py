@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-def calculate_normal_nll(y: pd.Series, sigma: NDArray, min_sigma: float = 1e-12):
+def calculate_normal_nll(y: NDArray, sigma: NDArray, min_sigma: float = 1e-12):
     """
     Calculate negative log-likelihood from returns and 
     scale parameters.
@@ -49,7 +49,7 @@ def optimize_gbt_constant_for_nll(y_train: pd.Series, sigma_train: NDArray) -> f
     float
         Optimal constant multiplier.
     """
-    objective = lambda c : calculate_normal_nll(y_train, sigma_train * c)
+    objective = lambda c : calculate_normal_nll(y_train.to_numpy(), sigma_train * c)
     c_hat = minimize_scalar(objective, bounds=(0,5), method="bounded").x
     return c_hat
 

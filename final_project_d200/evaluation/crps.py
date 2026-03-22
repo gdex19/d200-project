@@ -113,6 +113,31 @@ def crps_mdn_helper(a: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
     value = 2 * scale * stats.norm.pdf(a / scale) +  a * (2 * stats.norm.cdf(a / scale) - 1)
     return value
 
+def crps_mdn_helper_torch(a: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    """
+    Closed form function used for gaussian mixture CRPS, computed for whole tensor, using torch
+    for functions.
+
+    Parameters
+    ----------
+    a : torch.Tensor
+        Difference term used for calculation.
+    scale : torch.Tensor
+        Standard deviation term for each mixture + observation.
+
+    Returns
+    -------
+    torch.Tensor
+        Value of each term for each observation.
+    """
+    z = a / scale
+
+    pdf = torch.exp(-0.5 * z**2) / torch.sqrt(torch.tensor(2 * torch.pi, device=z.device, dtype=z.dtype))
+    cdf = 0.5 * (1 + torch.erf(z / torch.sqrt(torch.tensor(2.0, device=z.device, dtype=z.dtype))))
+
+    value = 2 * scale * pdf + a * (2 * cdf - 1)
+    return value
+
 def compute_mean_crps_mdn(model: nn.Module, data_loader: DataLoader) -> float:
     """
     Compute mean crps using MDN and data loader.
@@ -156,3 +181,40 @@ def compute_mean_crps_mdn(model: nn.Module, data_loader: DataLoader) -> float:
     crps_tensor = torch.concat(all_crps, dim=0)
 
     return torch.mean(crps_tensor).item()
+
+def compute_mean_crps_mdn_outputs(y: torch.Tensor, mixture_probs: torch.Tensor, means: torch.Tensor, scales: torch.Tensor) -> torch.Tensor:
+    """
+    Compute mean crps using MDN and (batch) X and y.
+
+    Parameters
+    ----------
+    y : torch.Tensor
+        Observed returns.
+    mixture_probs : torch.Tensor
+        Mixture probabilities.
+    means : torch.Tensor
+        Component means.
+    scales : torch.Tensor
+        Component standard deviations.
+
+    Returns
+    -------
+    float
+        Mean CRPS.
+    """
+    a_one = y.unsqueeze(1) - means
+    scale_one = scales
+    weights_one = mixture_probs
+    first_term_raw = crps_mdn_helper_torch(a_one, scale_one)
+    first_term = torch.sum(first_term_raw * weights_one, dim=1)
+
+    a_two = means.unsqueeze(2) - means.unsqueeze(1)
+    scale_two = torch.sqrt(scales.unsqueeze(2) ** 2 + scales.unsqueeze(1) ** 2)
+    weights_two = mixture_probs.unsqueeze(2) * mixture_probs.unsqueeze(1)
+    second_term_raw = crps_mdn_helper_torch(a_two, scale_two)
+    second_term = torch.sum(second_term_raw * weights_two, dim=(1, 2))
+
+    crpss = first_term - 0.5 * second_term
+
+
+    return torch.mean(crpss)

@@ -3,6 +3,7 @@ from .crps import (
     compute_mean_crps_arbitrary,
     compute_mean_crps_gaussian,
     compute_mean_crps_mdn,
+    compute_mean_crps_mdn_outputs
 )
 
 from .nll import (
